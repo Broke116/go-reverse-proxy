@@ -50,16 +50,18 @@ func getProxyURL(proxyCondition string) string {
 func serveReserveProxy(target string, res http.ResponseWriter, req *http.Request) {
 	url, _ := url.Parse(target)
 
-	proxy := httputil.NewSingleHostReverseProxy(url)
+	proxy := httputil.NewSingleHostReverseProxy(url) // creating the reverse proxy
 
 	req.URL.Host = url.Host
 	req.URL.Scheme = url.Scheme
-	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host")) // identifying the originating IP address of a client
 	req.Host = url.Host
 
 	proxy.ServeHTTP(res, req)
 }
 
+// reading the body of a request. then decodes the body content into requestPayload struct to extract proxy_condition value
+// then it gets the proxyUrl depending on the proxy_condition value. finally it callls the serveReverseProxy function to redirect the request
 func handleRequests(res http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 
