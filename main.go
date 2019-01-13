@@ -37,11 +37,15 @@ func getProxyURL(proxyCondition string) string {
 	proxyCondition = strings.ToUpper(proxyCondition)
 
 	if proxyCondition == "A" {
-		return urlA
+		if err := checkServerConnectivity(urlA); err == nil {
+			return urlA
+		}
 	}
 
 	if proxyCondition == "B" {
-		return urlB
+		if err := checkServerConnectivity(urlB); err == nil {
+			return urlB
+		}
 	}
 
 	return defaultURL
