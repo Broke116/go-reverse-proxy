@@ -13,7 +13,7 @@ import (
 
 const (
 	address    = ":9090"
-	urlA       = "http://localhost:1331"
+	urlA       = "http://localhost:4500"
 	urlB       = "http://localhost:1332"
 	defaultURL = "http://localhost:1333"
 )
@@ -65,7 +65,7 @@ func serveReserveProxy(target string, res http.ResponseWriter, req *http.Request
 }
 
 // reading the body of a request. then decodes the body content into requestPayload struct to extract proxy_condition value
-// then it gets the proxyUrl depending on the proxy_condition value. finally it callls the serveReverseProxy function to redirect the request
+// then it gets the proxyUrl depending on the proxy_condition value. finally it calls the serveReverseProxy function to redirect the request
 func handleRequests(res http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 
