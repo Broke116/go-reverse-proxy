@@ -1,5 +1,7 @@
 # Simple reverse proxy
 
+[![Build Status](https://travis-ci.com/Broke116/go-reverse-proxy.svg?branch=master)](https://travis-ci.com/Broke116/go-reverse-proxy)
+
 Learning project to understand how reverse proxy works. Later then it will be used for building a load balancer.
 [Inspired by this article](https://hackernoon.com/writing-a-reverse-proxy-in-just-one-line-with-go-c1edfa78c84b)
 
