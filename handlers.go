@@ -1,6 +1,9 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"sync/atomic"
+)
 
 // HomeHandler returns information about proxy server
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
@@ -13,7 +16,19 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 // then it gets the proxyUrl depending on the proxy_condition value. finally it calls the serveReverseProxy function to redirect the request
 func HandleRequest(w http.ResponseWriter, req *http.Request) {
 	// url, err := getProxyURL(requestPayload.ProxyCondition)
-	url := target1
+	work := Work{id: atomic.AddUint64(&counter, 1), response: w, request: req}
 
-	serveReserveProxy(url, w, req)
+	/*select {
+	case requests <- work:
+		logger.Printf("request with id %d will be redirected", work.id)
+	case <-results:
+		logger.Println("finished")
+	}*/
+
+	requests <- work
+
+	select {
+	case result := <-results:
+		logger.Printf("request id %d was redirected", result.id)
+	}
 }

@@ -13,13 +13,18 @@ const (
 )
 
 var logger = log.New(os.Stdout, "main package ", log.LstdFlags|log.Lshortfile)
+var counter uint64 // request counter for now. in the future it will be changed
 
 func main() {
 	logger.Printf("Server will handle requests at %s\n", port)
 
-	http.HandleFunc("/home", HomeHandler)
+	for w := 1; w <= 4; w++ {
+		go worker(w, requests, results)
+	}
 
+	http.HandleFunc("/home", HomeHandler)
 	http.HandleFunc("/", HandleRequest)
+
 	if err := http.ListenAndServe(port, nil); err != nil {
 		panic(err)
 	}
