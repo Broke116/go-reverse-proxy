@@ -16,7 +16,7 @@ var logger = log.New(os.Stdout, "main package ", log.LstdFlags|log.Lshortfile)
 
 const (
 	address    = ":9090"
-	urlA       = "http://localhost:4500"
+	urlA       = "http://localhost:1331"
 	urlB       = "http://localhost:1332"
 	defaultURL = "http://localhost:1333"
 )
@@ -96,11 +96,13 @@ func handleRequests(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		logger.Println("error", err)
+		res.WriteHeader(http.StatusGatewayTimeout)
+		res.Write([]byte(err.Error()))
+	} else {
+		logRequest(requestPayload, url)
+
+		serveReserveProxy(url, res, req)
 	}
-
-	logRequest(requestPayload, url)
-
-	serveReserveProxy(url, res, req)
 }
 
 func main() {
