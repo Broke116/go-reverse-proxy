@@ -8,8 +8,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 )
+
+var logger = log.New(os.Stdout, "main package ", log.LstdFlags|log.Lshortfile)
 
 const (
 	address    = ":9090"
@@ -23,32 +26,36 @@ type requestPayload struct {
 }
 
 func initialLog() {
-	log.Printf("Server will handle requests at %s\n", address)
-	log.Printf("Redirecting to A url: %s\n", urlA)
-	log.Printf("Redirecting to B url: %s\n", urlB)
-	log.Printf("Redirecting to Default url: %s\n", defaultURL)
+	logger.Printf("Redirecting to A url: %s\n", urlA)
+	logger.Printf("Redirecting to B url: %s\n", urlB)
+	logger.Printf("Redirecting to Default url: %s\n", defaultURL)
 }
 
 func logRequest(requestionPayload requestPayload, proxyURL string) {
-	log.Printf("proxy_condition: %s, proxy_url: %s\n", requestionPayload.ProxyCondition, proxyURL)
+	logger.Printf("proxy_condition: %s, proxy_url: %s\n", requestionPayload.ProxyCondition, proxyURL)
 }
 
-func getProxyURL(proxyCondition string) string {
+func getProxyURL(proxyCondition string) (string, error) {
+	var err error
 	proxyCondition = strings.ToUpper(proxyCondition)
 
 	if proxyCondition == "A" {
-		if err := checkServerConnectivity(urlA); err == nil {
-			return urlA
+		if err = checkServerConnectivity(urlA); err == nil {
+			return urlA, nil
 		}
 	}
 
 	if proxyCondition == "B" {
-		if err := checkServerConnectivity(urlB); err == nil {
-			return urlB
+		if err = checkServerConnectivity(urlB); err == nil {
+			return urlB, nil
 		}
 	}
 
-	return defaultURL
+	if err = checkServerConnectivity(defaultURL); err == nil {
+		return defaultURL, nil
+	}
+
+	return "", err
 }
 
 func serveReserveProxy(target string, res http.ResponseWriter, req *http.Request) {
@@ -70,7 +77,7 @@ func handleRequests(res http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 
 	if err != nil {
-		log.Printf("Error reading body: %v", err)
+		logger.Printf("Error reading body: %v", err)
 		panic(err)
 	}
 
@@ -82,15 +89,23 @@ func handleRequests(res http.ResponseWriter, req *http.Request) {
 	err = decoder.Decode(&requestPayload)
 
 	if err != nil {
+		logger.Printf("Request payload could not be decoded")
 		panic(err)
 	}
-	url := getProxyURL(requestPayload.ProxyCondition)
+	url, err := getProxyURL(requestPayload.ProxyCondition)
+
+	if err != nil {
+		logger.Println("error", err)
+	}
+
 	logRequest(requestPayload, url)
 
 	serveReserveProxy(url, res, req)
 }
 
 func main() {
+	logger.Printf("Server will handle requests at %s\n", address)
+
 	initialLog()
 
 	http.HandleFunc("/", handleRequests)

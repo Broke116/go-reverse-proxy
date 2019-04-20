@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net"
 	"net/url"
 	"time"
@@ -22,7 +21,7 @@ func checkServerConnectivity(address string) error {
 	_, err := net.DialTimeout("tcp", tcpAddress, timeout)
 
 	if err != nil {
-		log.Printf("%s is unreachable %v", tcpAddress, err)
+		logger.Printf("%s is unreachable %v", tcpAddress, err)
 	}
 
 	return err
