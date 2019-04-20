@@ -15,10 +15,9 @@ import (
 var logger = log.New(os.Stdout, "main package ", log.LstdFlags|log.Lshortfile)
 
 const (
-	address    = ":9090"
-	urlA       = "http://localhost:1331"
-	urlB       = "http://localhost:1332"
-	defaultURL = "http://localhost:1333"
+	port    = ":9090"
+	target1 = "http://localhost:1331"
+	target2 = "http://localhost:1332"
 )
 
 type requestPayload struct {
@@ -26,9 +25,8 @@ type requestPayload struct {
 }
 
 func initialLog() {
-	logger.Printf("Redirecting to A url: %s\n", urlA)
-	logger.Printf("Redirecting to B url: %s\n", urlB)
-	logger.Printf("Redirecting to Default url: %s\n", defaultURL)
+	logger.Printf("Redirecting to A url: %s\n", target1)
+	logger.Printf("Redirecting to B url: %s\n", target2)
 }
 
 func logRequest(requestionPayload requestPayload, proxyURL string) {
@@ -40,25 +38,21 @@ func getProxyURL(proxyCondition string) (string, error) {
 	proxyCondition = strings.ToUpper(proxyCondition)
 
 	if proxyCondition == "A" {
-		if err = checkServerConnectivity(urlA); err == nil {
-			return urlA, nil
+		if err = checkServerConnectivity(target1); err == nil {
+			return target1, nil
 		}
 	}
 
 	if proxyCondition == "B" {
-		if err = checkServerConnectivity(urlB); err == nil {
-			return urlB, nil
+		if err = checkServerConnectivity(target2); err == nil {
+			return target2, nil
 		}
-	}
-
-	if err = checkServerConnectivity(defaultURL); err == nil {
-		return defaultURL, nil
 	}
 
 	return "", err
 }
 
-func serveReserveProxy(target string, res http.ResponseWriter, req *http.Request) {
+func serveReserveProxy(target string, w http.ResponseWriter, req *http.Request) {
 	url, _ := url.Parse(target)
 
 	proxy := httputil.NewSingleHostReverseProxy(url) // creating the reverse proxy
@@ -68,12 +62,12 @@ func serveReserveProxy(target string, res http.ResponseWriter, req *http.Request
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host")) // identifying the originating IP address of a client
 	req.Host = url.Host
 
-	proxy.ServeHTTP(res, req)
+	proxy.ServeHTTP(w, req)
 }
 
 // reading the body of a request. then decodes the body content into requestPayload struct to extract proxy_condition value
 // then it gets the proxyUrl depending on the proxy_condition value. finally it calls the serveReverseProxy function to redirect the request
-func handleRequests(res http.ResponseWriter, req *http.Request) {
+func handleRequests(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 
 	if err != nil {
@@ -96,22 +90,30 @@ func handleRequests(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		logger.Println("error", err)
-		res.WriteHeader(http.StatusGatewayTimeout)
-		res.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusGatewayTimeout)
+		w.Write([]byte(err.Error()))
 	} else {
 		logRequest(requestPayload, url)
 
-		serveReserveProxy(url, res, req)
+		serveReserveProxy(url, w, req)
 	}
 }
 
+// HomeHandler returns information about proxy server
+func HomeHandler(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Reverse proxy server is up and running. Accepting at port " + port + " Redirecting to " + target1 + " , " + target2))
+}
+
 func main() {
-	logger.Printf("Server will handle requests at %s\n", address)
+	logger.Printf("Server will handle requests at %s\n", port)
 
 	initialLog()
 
+	http.HandleFunc("/home", HomeHandler)
+
 	http.HandleFunc("/", handleRequests)
-	if err := http.ListenAndServe(address, nil); err != nil {
+	if err := http.ListenAndServe(port, nil); err != nil {
 		panic(err)
 	}
 }
