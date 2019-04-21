@@ -50,6 +50,6 @@ func serveReserveProxy(requestID uint64, target string, w http.ResponseWriter, r
 
 	proxy.ServeHTTP(w, req)
 
-	result := Result{id: requestID, result: true}
+	result := Result{id: requestID, result: true, target: target}
 	results <- result
 }

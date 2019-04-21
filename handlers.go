@@ -5,6 +5,20 @@ import (
 	"sync/atomic"
 )
 
+// Request is a unit of work which consists of a http request that are going to be handled by a worker and send it to the right target.
+type Request struct {
+	id       uint64
+	response http.ResponseWriter
+	request  *http.Request
+}
+
+// Result is a struct which indicates the result of the redirection.
+type Result struct {
+	id     uint64
+	result bool
+	target string
+}
+
 // HomeHandler returns information about proxy server
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -15,20 +29,12 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 // then decodes the body content into requestPayload struct to extract proxy_condition value
 // then it gets the proxyUrl depending on the proxy_condition value. finally it calls the serveReverseProxy function to redirect the request
 func HandleRequest(w http.ResponseWriter, req *http.Request) {
-	// url, err := getProxyURL(requestPayload.ProxyCondition)
-	work := Work{id: atomic.AddUint64(&counter, 1), response: w, request: req}
+	request := Request{id: atomic.AddUint64(&counter, 1), response: w, request: req}
 
-	/*select {
-	case requests <- work:
-		logger.Printf("request with id %d will be redirected", work.id)
-	case <-results:
-		logger.Println("finished")
-	}*/
-
-	requests <- work
+	requests <- request
 
 	select {
 	case result := <-results:
-		logger.Printf("request id %d was redirected", result.id)
+		logger.Printf("request id %d was redirected to %s", result.id, result.target)
 	}
 }

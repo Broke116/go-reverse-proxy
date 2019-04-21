@@ -5,6 +5,10 @@
 Learning project to understand how reverse proxy works. Later then it will be used for building a load balancer.
 [Inspired by this article](https://hackernoon.com/writing-a-reverse-proxy-in-just-one-line-with-go-c1edfa78c84b)
 
+Mini load balancer application in Go was demonstrated by Rob Pike. [Slide](https://talks.golang.org/2012/waza.slide#1)
+After covering this awesome slide, I wanted to create a reverse proxy/load balancer server to learn and understand the concepts of
+concurrency, worker pools and networking.
+
 ## How to build
 ```
 # Build the project
