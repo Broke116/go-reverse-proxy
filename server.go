@@ -29,17 +29,18 @@ func checkServerConnectivity(address string) error {
 	return err
 }
 
-func serveReserveProxy(requestID uint64, target string, w http.ResponseWriter, req *http.Request) {
-	err := checkServerConnectivity(target)
+func serveReserveProxy(done chan *Work, work *Work, requestID uint64, w http.ResponseWriter, req *http.Request) {
+	err := checkServerConnectivity(work.url)
 
 	if err != nil {
 		w.WriteHeader(http.StatusGatewayTimeout)
 		w.Write([]byte(err.Error()))
-		result := Result{id: requestID, result: false}
+		result := false
 		results <- result
+		return
 	}
 
-	url, _ := url.Parse(target)
+	url, _ := url.Parse(work.url)
 
 	proxy := httputil.NewSingleHostReverseProxy(url) // creating the reverse proxy
 
@@ -48,8 +49,9 @@ func serveReserveProxy(requestID uint64, target string, w http.ResponseWriter, r
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host")) // identifying the originating IP address of a client
 	req.Host = url.Host
 
+	logger.Printf("request id %d was redirected to %s", requestID, work.url)
 	proxy.ServeHTTP(w, req)
 
-	result := Result{id: requestID, result: true, target: target}
-	results <- result
+	results <- true
+	done <- work
 }

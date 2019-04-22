@@ -12,13 +12,6 @@ type Request struct {
 	request  *http.Request
 }
 
-// Result is a struct which indicates the result of the redirection.
-type Result struct {
-	id     uint64
-	result bool
-	target string
-}
-
 // HomeHandler returns information about proxy server
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -33,8 +26,11 @@ func HandleRequest(w http.ResponseWriter, req *http.Request) {
 
 	requests <- request
 
-	select {
-	case result := <-results:
-		logger.Printf("request id %d was redirected to %s", result.id, result.target)
+	for {
+		select {
+		case result := <-results:
+			logger.Println(result)
+			return
+		}
 	}
 }
