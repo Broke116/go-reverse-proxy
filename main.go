@@ -14,9 +14,9 @@ const (
 
 var logger = log.New(os.Stdout, "main package ", log.LstdFlags|log.Lshortfile)
 var counter uint64 // request counter for now. in the future it will be changed
-var requests = make(chan Request, capacity)
+var requests = make(chan *Request, capacity)
 var results = make(chan bool, capacity)
-var nWorkers = 4
+var nWorkers = 10
 var capacity = 100
 
 func main() {

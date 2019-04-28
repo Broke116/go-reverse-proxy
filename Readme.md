@@ -12,6 +12,8 @@ After covering this awesome slide, I wanted to create a reverse proxy/load balan
 concurrency, worker pools and networking.
 On top of that I mixed load balancer with reverse proxy and worker pool implementation.
 
+Sample priority queue implementation which is based on min-heap can be found here as well [example](https://golang.org/src/container/heap/example_pq_test.go)
+
 ## How to build
 ```
 # Build the project

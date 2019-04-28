@@ -7,7 +7,7 @@ type Pool []*Work
 func (p Pool) Len() int { return len(p) }
 
 func (p Pool) Less(i, j int) bool {
-	return p[i].pending < p[j].pending
+	return p[i].pending > p[j].pending
 }
 
 func (p *Pool) Swap(i, j int) {

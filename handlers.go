@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"runtime/pprof"
 	"sync/atomic"
 )
 
@@ -14,6 +16,7 @@ type Request struct {
 
 // HomeHandler returns information about proxy server
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
+	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1) // for debugging purposes. when this endpoint is called.
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Reverse proxy server is up and running. Accepting at port " + port + " Redirecting to " + target1 + " , " + target2))
 }
@@ -22,7 +25,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 // then decodes the body content into requestPayload struct to extract proxy_condition value
 // then it gets the proxyUrl depending on the proxy_condition value. finally it calls the serveReverseProxy function to redirect the request
 func HandleRequest(w http.ResponseWriter, req *http.Request) {
-	request := Request{id: atomic.AddUint64(&counter, 1), response: w, request: req}
+	request := &Request{id: atomic.AddUint64(&counter, 1), response: w, request: req}
 
 	requests <- request
 

@@ -29,8 +29,10 @@ func checkServerConnectivity(address string) error {
 	return err
 }
 
-func serveReserveProxy(done chan *Work, work *Work, requestID uint64, w http.ResponseWriter, req *http.Request) {
+func serveReserveProxy(done chan *Work, work *Work, request *Request) {
 	err := checkServerConnectivity(work.url)
+	req := request.request
+	w := request.response
 
 	if err != nil {
 		w.WriteHeader(http.StatusGatewayTimeout)
@@ -49,7 +51,7 @@ func serveReserveProxy(done chan *Work, work *Work, requestID uint64, w http.Res
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host")) // identifying the originating IP address of a client
 	req.Host = url.Host
 
-	logger.Printf("request id %d was redirected to %s", requestID, work.url)
+	logger.Printf("request id %d was redirected to %s", request.id, work.url)
 	proxy.ServeHTTP(w, req)
 
 	results <- true
